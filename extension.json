@@ -1,0 +1,13 @@
+{
+  "name": "F.Port decoder",
+  "apiVersion": "1.0.0",
+  "author": "Mykolas Juraitis",
+  "version": "0.0.1",
+  "description": "Decodes FrSKY F.Port protocol",
+  "extensions": {
+    "F.Port decoder": {
+      "type": "HighLevelAnalyzer",
+      "entryPoint": "HighLevelAnalyzer.Hla"
+    }
+  }
+}
