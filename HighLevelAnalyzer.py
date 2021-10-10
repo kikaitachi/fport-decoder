@@ -76,11 +76,11 @@ class Hla(HighLevelAnalyzer):
             })
             if len(self.frame_data) == self.data_len:
                 self.state = State.WAIT_FOR_FIRST_BYTE
-                channels = self.data_len * 8 // 11  # 11 bits / channel
+                channels = (self.data_len - 3) * 8 // 11  # 11 bits / channel
+                bit_duration = 0.000008681  # 115200 bps
                 frames = []
                 if (self.frame_type == FrameType.CONTROL):
-                    start_time = self.frame_data[0]['start_time']
-                    bit_duration = float(self.frame_data[0]['end_time'] - start_time) / 10
+                    start_time = self.frame_data[0]['start_time'] + GraphTimeDelta(bit_duration)
                     value = 0
                     bits = 0
                     channel = 0
@@ -89,12 +89,14 @@ class Hla(HighLevelAnalyzer):
                         bits += 8
                         if bits >= 11:
                             channel += 1
-                            end_time = start_time + GraphTimeDelta(bit_duration * 11)
+                            end_time = f['end_time'] - GraphTimeDelta(bit_duration * (bits - 10.5))
                             frames.append(AnalyzerFrame('decoded_data',
                                                         start_time,
                                                         end_time,
-                                                        { 'decoded': 'ch' + str(channel) + ':' + str(value >> (bits - 11)) }))
-                            value & (0xFFFF << (bits - 11))
+                                                        { 'decoded': 'ch' + str(channel) + ':' + str(value & 0x07FF) }))
+                            if channel == channels:
+                                break
+                            value >>= 11
                             bits -= 11
                             start_time = end_time
                     frames.append(AnalyzerFrame('decoded_data',
