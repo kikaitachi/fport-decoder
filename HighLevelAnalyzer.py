@@ -100,19 +100,40 @@ class Hla(HighLevelAnalyzer):
                             bits -= 11
                             start_time = end_time
                     frames.append(AnalyzerFrame('decoded_data',
-                                                self.frame_data[-4]['start_time'],
-                                                self.frame_data[-4]['end_time'],
-                                                { 'decoded': 'Flags' }))
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 4.5),
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 3.5),
+                                                { 'decoded': 'failsafe:' + str(self.frame_data[-4]['byte'] & 0x08 > 0).lower() }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 3.5),
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 2.5),
+                                                { 'decoded': 'lost frame:' + str(self.frame_data[-4]['byte'] & 0x04 > 0).lower() }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 2.5),
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 1.5),
+                                                { 'decoded': 'ch18:' + str(self.frame_data[-4]['byte'] & 0x02 > 0).lower() }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 1.5),
+                                                self.frame_data[-4]['end_time'] - GraphTimeDelta(bit_duration * 0.5),
+                                                { 'decoded': 'ch17:' + str(self.frame_data[-4]['byte'] & 0x01 > 0).lower() }))
                     frames.append(AnalyzerFrame('decoded_data',
                                                 self.frame_data[-3]['start_time'],
                                                 self.frame_data[-3]['end_time'],
-                                                { 'decoded': 'RSSI' }))
-                frames.append(AnalyzerFrame('decoded_data',
-                                            self.frame_data[-2]['start_time'],
-                                            self.frame_data[-2]['end_time'],
-                                            { 'decoded': 'CRC' }))
-                frames.append(AnalyzerFrame('decoded_data',
-                                            frame.start_time,
-                                            frame.end_time,
-                                            { 'decoded': 'End' }))
+                                                { 'decoded': 'RSSI:' + str(self.frame_data[-3]['byte']) }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-2]['start_time'],
+                                                self.frame_data[-2]['end_time'],
+                                                { 'decoded': 'CRC:' + str(self.frame_data[-2]['byte']) }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                frame.start_time,
+                                                frame.end_time,
+                                                { 'decoded': 'Control frame end' }))
+                else:
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-2]['start_time'],
+                                                self.frame_data[-2]['end_time'],
+                                                { 'decoded': 'CRC:' + str(self.frame_data[-2]['byte']) }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                                frame.start_time,
+                                                frame.end_time,
+                                                { 'decoded': 'End' }))
                 return frames
