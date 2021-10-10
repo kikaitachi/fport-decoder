@@ -91,7 +91,7 @@ class Hla(HighLevelAnalyzer):
                 channels = (self.data_len - 3) * 8 // 11  # 11 bits / channel
                 bit_duration = 0.000008681  # 115200 bps
                 frames = []
-                if (self.frame_type == FrameType.CONTROL):
+                if self.frame_type == FrameType.CONTROL:
                     start_time = self.frame_data[0]['start_time'] + GraphTimeDelta(bit_duration)
                     value = 0
                     bits = 0
@@ -131,6 +131,19 @@ class Hla(HighLevelAnalyzer):
                                                 self.frame_data[-3]['start_time'],
                                                 self.frame_data[-3]['end_time'],
                                                 { 'decoded': 'RSSI:' + str(self.frame_data[-3]['byte']) }))
+                elif self.frame_type == FrameType.DOWNLINK_DATA:
+                    frames.append(AnalyzerFrame('decoded_data',
+                                            self.frame_data[-9]['start_time'],
+                                            self.frame_data[-9]['end_time'],
+                                            { 'decoded': 'Prime' }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                            self.frame_data[-8]['start_time'],
+                                            self.frame_data[-7]['end_time'],
+                                            { 'decoded': 'AppID' }))
+                    frames.append(AnalyzerFrame('decoded_data',
+                                            self.frame_data[-6]['start_time'],
+                                            self.frame_data[-3]['end_time'],
+                                            { 'decoded': 'Data' }))
                 frames.append(AnalyzerFrame('decoded_data',
                                             self.frame_data[-2]['start_time'],
                                             self.frame_data[-2]['end_time'],
