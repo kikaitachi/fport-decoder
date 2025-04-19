@@ -51,6 +51,12 @@ class Hla(HighLevelAnalyzer):
             elif data == bytes.fromhex('08'):
                 self.state = State.WAIT_FOR_UPLINK_TYPE
         elif self.state == State.WAIT_FOR_DOWNLINK_LEN:
+            if data == bytes.fromhex('7E'):
+                self.state = State.WAIT_FOR_DOWNLINK_LEN
+                return AnalyzerFrame('decoded_data',
+                                     frame.start_time,
+                                     frame.end_time,
+                                     { 'decoded': 'Head' })            
             self.state = State.WAIT_FOR_DOWNLINK_TYPE
             self.data_len = data[0] + 1
             self.frame_data = []
@@ -132,10 +138,16 @@ class Hla(HighLevelAnalyzer):
                                                 self.frame_data[-3]['end_time'],
                                                 { 'decoded': 'RSSI:' + str(self.frame_data[-3]['byte']) }))
                 elif self.frame_type == FrameType.DOWNLINK_DATA:
-                    frames.append(AnalyzerFrame('decoded_data',
-                                            self.frame_data[-9]['start_time'],
-                                            self.frame_data[-9]['end_time'],
-                                            { 'decoded': 'Prime' }))
+                    if self.frame_data[-9]['byte'] == 0:
+                        frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-9]['start_time'],
+                                                self.frame_data[-9]['end_time'],
+                                                { 'decoded': 'Prime:' + str(self.frame_data[-9]['byte']) }))
+                    else:
+                        frames.append(AnalyzerFrame('decoded_data',
+                                                self.frame_data[-9]['start_time'],
+                                                self.frame_data[-9]['end_time'],
+                                                { 'decoded': 'Prime:' + str(self.frame_data[-9]['byte']) + ' *** ' }))
                     frames.append(AnalyzerFrame('decoded_data',
                                             self.frame_data[-8]['start_time'],
                                             self.frame_data[-7]['end_time'],
@@ -153,3 +165,6 @@ class Hla(HighLevelAnalyzer):
                                             frame.end_time,
                                             { 'decoded': 'End' }))
                 return frames
+        else:
+            self.state = State.WAIT_FOR_FIRST_BYTE
+
